@@ -34,6 +34,7 @@ bot.auto_sync_commands = False
 guilds=["1182047934750142524"]
 invites = {}
 setup_panels = {}
+setup_status_panels = {}
 embed_credits = discord.Embed(title="⟶ keeping communities safer.",description="a  verification solution developed, hosted, and maintained by [mae.red](https://mae.red). please consider **[donating](https://www.buymeacoffee.com/maedotred)** to support my efforts :)",color=discord.Color.from_rgb(255,255,255))
 
 async def fetch_hooks_channel(guild:discord.Guild) -> discord.TextChannel: 
@@ -124,6 +125,46 @@ def has_perms(allow_mods=False,dev_only = False):
                 return admin
     return commands.check(predicate)
 
+def setup_status_embed(guild:discord.Guild) -> discord.Embed():
+    path = f'./configs/{guild.id}.json'
+    if os.path.exists(path):
+        with open(path, 'r') as file:
+            config = json.load(file)        
+    unset = '❗ **Not set.**'
+    set = '↳ **Value set.**'
+    embed=discord.Embed(title=f'⟶ {guild.name} Setup Status')
+    embed.add_field(name='Mod Channel',value='For important reports, updates, and RIT server-wide warnings.',inline=False)
+    embed.add_field(name='Log Channel',value='For join logs and non-urgent information.',inline=False)
+    embed.add_field(name='Moderator Role',value='Role allowed to use `/report` aside from admins.',inline=False)
+    requirements = ['mod_channel','hooks_channel','mod_role']
+    f=0
+    complete = 0
+    for field in embed.fields:
+        field.value += '\n'
+        try:
+            isvalue = config[requirements[f]]
+            field.value+=set
+            complete +=1
+        except:
+            field.value+=unset
+        f+=1
+    if complete ==3:
+        embed.set_footer(text='Setup complete.')
+        embed.color=discord.Colour.brand_green()
+    else:
+        embed.set_footer(text='Setup not complete.')
+        embed.color=discord.Colour.yellow()
+    return embed
+
+async def update_dev_setup_status(guild:discord.Guild):
+    try:
+        if str(guild.id) in setup_status_panels:
+            await setup_status_panels[str(guild.id)].edit(embed=setup_status_embed(guild))
+        else:
+            setup_status_panels[str(guild.id)] = await dev_logs_channel.send(embed=setup_status_embed(guild))
+    except Exception as e:
+        print(e)
+
 def setup_embed(guild:discord.Guild) -> discord.Embed():
     completion_icons = [f'https://cdn.discordapp.com/attachments/1107483500384358510/1181641936889712700/1-3.png','https://cdn.discordapp.com/attachments/1107483500384358510/1181641937363677274/2-3.png','https://cdn.discordapp.com/attachments/1107483500384358510/1181641937112027196/3-3.png']
     path = f'./configs/{guild.id}.json'
@@ -160,8 +201,12 @@ def setup_embed(guild:discord.Guild) -> discord.Embed():
 @has_perms()
 async def setup(ctx: discord.ApplicationContext):
     '''Bridge Setup'''
+    await ctx.guild.get_member(bot.user.id).edit(nick='Bridge')
     await ctx.respond('## Welcome to Bridge.')
     setup_panels[str(ctx.guild.id)] = await ctx.channel.send(embed=setup_embed(ctx.guild))
+    await update_dev_setup_status(ctx.guild)
+    
+    
 
 async def initial_ban(channel:discord.TextChannel):
     await channel.send('# Setup complete.\nThis next step involves preemptively banning known alternative accounts. This may take some time. Please wait.')
@@ -187,7 +232,6 @@ def write_config_value(guild:discord.Guild,variable:str,value):
 config = discord.SlashCommandGroup("config", "Bridge configuration commands")
 
 @config.command(guild_ids=guilds)
-@has_perms()
 async def setchannel(ctx: discord.ApplicationContext, option: discord.Option(str, choices=['Mod Channel', 'Log Channel']), value: discord.Option(discord.TextChannel)):
     '''Set the Mod or Log channel'''
     if not value.permissions_for(ctx.guild.me).view_channel or not value.permissions_for(ctx.guild.me).send_messages:
@@ -205,8 +249,8 @@ async def setchannel(ctx: discord.ApplicationContext, option: discord.Option(str
         except Exception as e:
             print(e)
     await ctx.respond('Configuration updated.', ephemeral=True, delete_after=1)
-    if do_initial_ban:
-        await initial_ban(ctx.channel)
+    if do_initial_ban:await initial_ban(ctx.channel)
+    await update_dev_setup_status(ctx.guild)
 
 @config.command(guild_ids=guilds)
 @has_perms()
@@ -221,6 +265,8 @@ async def setmodrole(ctx: discord.ApplicationContext,value:discord.Role):
             print(e)
     await ctx.respond('Configuration updated.',ephemeral=True,delete_after=1)
     if do_initial_ban: await initial_ban(ctx.channel)
+    await update_dev_setup_status(ctx.guild)
+
 bot.add_application_command(config)
 
 @bot.slash_command(guild_ids=guilds)
@@ -326,10 +372,17 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.respond(f'This command is on cooldown. Please retry in {round(error.retry_after, 2)}.\n## Are you still waiting for an email?\nDue to the large volume of emails being sent and restrictions on rit.edu, it may take upwards of two hours to receive this email.',ephemeral=True)
     
+client_server_commands = [report, config, setup]
+dev_commands = [report, config, setup, bms]
+
 @bot.event
 async def on_guild_join(guild:discord.Guild):
+    print('[bold]New server joined[/bold]')
+    await dev_logs_channel.send()
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'{len(bot.guilds)} RIT servers.'))
+    console.print(f' ↳ Syncing universal commands to {guild.name} ...',style=styles.working)
     await guild.get_member(bot.user.id).edit(nick='Bridge - run /setup')
+    await bot.sync_commands(commands=client_server_commands,guild_ids = [guild.id]) 
 
 @bot.event
 async def on_ready():
@@ -340,20 +393,19 @@ async def on_ready():
     
     console.print(f'Syncing commands...')
 
-    client_server_commands = [report, config, setup]
-    dev_commands = [report, config, setup, bms]
     
     console.print(f' ↳ Syncing universal commands...',style=styles.working)
     await bot.sync_commands(commands=dev_commands,guild_ids = guild_ids)
     
     console.print(f' ↳ Syncing dev server commands...',style=styles.working)
     bot.add_application_command(bms)
-    await bot.sync_commands(commands=dev_commands,guild_ids = guilds) # 
+    await bot.sync_commands(commands=client_server_commands,guild_ids = guilds) 
     
     console.print(f'Fetching from dev guild...',style=styles.working)
-    global dev_guild,dev_reports_channel,dev_role
+    global dev_guild,dev_reports_channel,dev_role,dev_logs_channel
     dev_guild = await bot.fetch_guild(1182047934750142524)
     dev_reports_channel = await dev_guild.fetch_channel(1182056826997587979)
+    dev_logs_channel = await dev_guild.fetch_channel(1182073430548422676)
     dev_role = await dev_guild._fetch_role(1182053347801436270)
     console.print('Fetching invites...',style=styles.working)
     guild_invs = []
