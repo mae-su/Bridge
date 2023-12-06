@@ -378,7 +378,10 @@ dev_commands = [report, config, setup, bms]
 @bot.event
 async def on_guild_join(guild:discord.Guild):
     print('[bold]New server joined[/bold]')
-    await dev_logs_channel.send()
+    try:
+        update_dev_setup_status(guild)
+    except Exception as e:
+        print(e)
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'{len(bot.guilds)} RIT servers.'))
     console.print(f' ↳ Syncing universal commands to {guild.name} ...',style=styles.working)
     await guild.get_member(bot.user.id).edit(nick='Bridge - run /setup')
