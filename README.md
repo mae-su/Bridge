@@ -1,7 +1,7 @@
 # __Bridge__ - an RIT server management bot
 **Bridge** is a Discord bot designed to protect multiple servers against known malicious alternative accounts.
 
-This repository implements an open-sourced version of [ritV](https://github.com/mae-su/ritV/) by [mae.red](https://mae.red), an RIT server security database and library. It exists to protect multiple Discord servers against a growing list of known alternative accounts.
+This repository implements an open-sourced version of [ritV](https://github.com/mae-su/ritV/) by [mae.red](https://mae.red), an RIT server security database and library. It exists to protect multiple Discord servers against a growing list of known alternative accounts. 
 
 ## Scope: What this project __is__
 
@@ -70,7 +70,5 @@ An instance of Bridge is currently being deployed to RIT communities. Please rea
 ## Feature requests
 If you already have Bridge in your server and you want it to do more, please consider that this is not a general purpose server bot. If your community needs further cross-server mechanisms, it would best be done seperately. 
 
-## Organized by the __RIT Mod Collective__
-This system was a coordinated effort among RIT server management to foster peace of mind when running servers.
 ## ⟶ developed by [**mae.red**](https://mae.red) and Henry
 please consider **[donating](https://www.buymeacoffee.com/maedotred)** to support my efforts!
