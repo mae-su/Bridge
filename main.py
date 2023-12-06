@@ -142,13 +142,13 @@ def setup_embed(guild:discord.Guild) -> discord.Embed():
     for field in embed.fields:
         field.value += '\n'
         try:
-            if f==2:field.value+=set.replace('<>',f'<@{config[requirements[f]]}>')
+            if f==2:field.value+=set.replace('<>',f'<@&{config[requirements[f]]}>')
             else: field.value+=set.replace('<>',f'<#{config[requirements[f]]}>')
             complete +=1
         except:
             field.value+=unset
-            if f==2:field.value+=' Please run `/config setchannel`'
-            else: field.value+=' Please run `/config setmodrole`'
+            if f==2:field.value+=' Please run `/config setmodrole`'
+            else: field.value+=' Please run `/config setchannel`'
         f+=1
     if complete !=0:
         embed.set_footer(icon_url=completion_icons[complete-1],text=f'{((complete/3)*100):.0f}% complete')
