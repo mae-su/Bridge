@@ -31,7 +31,7 @@ else:
 
 bot = commands.Bot(intents=discord.Intents.all())
 bot.auto_sync_commands = False
-guilds=["1027619850765475861"]
+guilds=["1182047934750142524"]
 invites = {}
 setup_panels = {}
 embed_credits = discord.Embed(title="⟶ keeping communities safer.",description="a  verification solution developed, hosted, and maintained by [mae.red](https://mae.red). please consider **[donating](https://www.buymeacoffee.com/maedotred)** to support my efforts :)",color=discord.Color.from_rgb(255,255,255))
@@ -352,9 +352,9 @@ async def on_ready():
     
     console.print(f'Fetching from dev guild...',style=styles.working)
     global dev_guild,dev_reports_channel,dev_role
-    dev_guild = await bot.fetch_guild(1027619850765475861)
-    dev_reports_channel = await dev_guild.fetch_channel(1181145461957083137)
-    dev_role = await dev_guild._fetch_role(1180629309652746390)
+    dev_guild = await bot.fetch_guild(1182047934750142524)
+    dev_reports_channel = await dev_guild.fetch_channel(1182056826997587979)
+    dev_role = await dev_guild._fetch_role(1182053347801436270)
     console.print('Fetching invites...',style=styles.working)
     guild_invs = []
     for guild in bot.guilds:
