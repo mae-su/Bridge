@@ -63,7 +63,19 @@ async def memberAlert(title:str, member:discord.Member,description=None):
     warn.set_thumbnail(url=member.avatar.url)
     warn.add_field(name='Name',value=member.name)
     warn.add_field(name='Mention',value=f'<@{member.id}>')    
-    await channel_mod.send(embed=warn)
+    try:
+        await dev_logs_channel.send(embed=warn)
+    except:
+        pass
+    try:
+        await channel_mod.send(embed=warn)
+    except:
+        try:
+            await channel_mod.send(f'[Embed failure - please check permissions.]\n**{title}**\n<@{member.id}>')
+        except:
+            await dev_logs_channel.send(f'Error: Failed to send ban alert embed or message for <@{member.id}> in {member.guild.name}, likely due to a permissions error.')
+                
+
 
 async def ban_alt_list(guild:discord.Guild,banned_ids=verif.fetch_banlist(),reason_message='A new alt account was banned from your server.'):
     time_start = time.time()
@@ -203,7 +215,10 @@ async def setup(ctx: discord.ApplicationContext):
     '''Bridge Setup'''
     await ctx.guild.get_member(bot.user.id).edit(nick='Bridge')
     await ctx.respond('## Welcome to Bridge.')
-    setup_panels[str(ctx.guild.id)] = await ctx.channel.send(embed=setup_embed(ctx.guild))
+    try:
+        setup_panels[str(ctx.guild.id)] = await ctx.channel.send(embed=setup_embed(ctx.guild))
+    except:
+        ctx.respond('Unable to send setup embed. Please check permissions.')
     await update_dev_setup_status(ctx.guild)
     
     
@@ -234,7 +249,7 @@ config = discord.SlashCommandGroup("config", "Bridge configuration commands")
 @config.command(guild_ids=guilds)
 async def setchannel(ctx: discord.ApplicationContext, option: discord.Option(str, choices=['Mod Channel', 'Log Channel']), value: discord.Option(discord.TextChannel)):
     '''Set the Mod or Log channel'''
-    if not value.permissions_for(ctx.guild.me).view_channel or not value.permissions_for(ctx.guild.me).send_messages:
+    if not value.permissions_for(ctx.guild.me).view_channel or not value.permissions_for(ctx.guild.me).send_messages or not value.permissions_for(ctx.guild.me).embed_links:
         await ctx.respond("Invalid channel. Please check its permissions and make sure Bridge can view and send messages in it.", ephemeral=True)
         return
     json_names = {
