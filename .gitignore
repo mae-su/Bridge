@@ -1,0 +1,6 @@
+bot.token
+ritv.credentials.aes
+/__pycache__
+*/__pycache__
+bot.credentials
+temp.md
