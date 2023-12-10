@@ -4,3 +4,4 @@ ritv.credentials.aes
 */__pycache__
 bot.credentials
 temp.md
+populate.json

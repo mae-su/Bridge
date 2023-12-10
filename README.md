@@ -19,33 +19,34 @@ Bridge does NOT do any of the following:
 - Collect information of usual server activity
 
 # How it works
-Bridge operates using a database of alternative accounts. New accounts are suggested through **reports** made from within RIT servers. **Reports** are judged by admins of a **Bridge management server**, made available to higher management roles of RIT servers. When an account is determined to be an alternative account, Bridge will ban the account by ID across all servers it is in.
+Bridge operates using a database of alternative accounts. New accounts are suggested through **reports** made from within RIT servers. **Reports** are judged by admins of a **Bridge Management Server**, available to join upon request for higher management roles of RIT servers using Bridge. When an account is determined to be an alternative account, Bridge will ban the account by ID across all servers it is in.
 
 # Getting Started
-Once Bridge has been invited, run `/setup` to access the Bridge setup panel. This can be run at any time in the future to adjust preferences.
+Once Bridge has been invited, run `/setup` to access the Bridge Setup Panel. The Setup Panel will guide you through the steps necessary to get started, and can be run at any time to adjust preferences.
 
-![Bridge Setup Panel](https://cdn.discordapp.com/attachments/1107483500384358510/1181463471263580221/image.png)
+![Bridge Setup Panel](https://cdn.discordapp.com/attachments/1107483500384358510/1183138527463084072/image.png)
 
-***Never* select a publicly available channel for these options!**
+***Never* select a publicly available channel or role for these options!**
 - **Mod Channel:** for important reports, updates, and RIT server-wide warnings. We recommend using your server's private moderation channel.
 - **Log Channel:** for join logs and non-urgent information.
+- **Moderator Role:** a role that should be allowed to use `/report`. We recommend setting this to your server's moderator exclusive role.
 
-**Once channels are selected,** Bridge will automatically ban all known alternative accounts from your server.
+**Once all values are set,** Bridge will automatically ban all known alternative accounts from your server.
 
 ![Bridge log message saying it preemptively banned 46 alternative accounts](https://cdn.discordapp.com/attachments/1107483500384358510/1181467148477005874/image.png)
 
-## Reporting alternative accounts with `/reportalt`
+## Reporting alternative accounts with `/report`
 
-`/reportalt <member/uid> <reason>`
+`/report <member> <reason>`
 
 This command will send a request to the Bridge management server to have a suspected alternative account banned.
 
-![Example usage of the altreport command.](https://cdn.discordapp.com/attachments/1107483500384358510/1181511612671205386/image.png)
+![Example usage of the altreport command.](cdn.discordapp.com/attachments/1107483500384358510/1183139475145105519/image.png)
 ### What happens behind the scenes
 Reports sent to the Bridge management server contain the following:
 - The report's **origin** *(no invite link will be made)*
 - The report's **reason**
-- A view of **affiliated servers** the reported account appears in
+- A view of **other Bridge servers** that the reported account appears in
 - The reported account name, PFP, and user ID.
 
 ![An embed containing a report with the origin, reason, ID, Name, and Mention in an embed](https://cdn.discordapp.com/attachments/1107483500384358510/1181737219971616798/image.png)

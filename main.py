@@ -8,11 +8,15 @@ import datetime
 import aiohttp
 import time
 from rich.console import Console
-import utils
+import argparse
 import os
 import pickle
 from rich.prompt import Prompt
 import json
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--no-resync', action='store_true', help='Skip synchronizing commands for quick debugging.')
+debug_args = parser.parse_args()
 
 console= Console()
 
@@ -64,19 +68,18 @@ async def memberAlert(title:str, member:discord.Member,description=None):
     warn.add_field(name='Name',value=member.name)
     warn.add_field(name='Mention',value=f'<@{member.id}>')    
     try:
-        await dev_logs_channel.send(embed=warn)
-    except:
-        pass
-    try:
         await channel_mod.send(embed=warn)
     except:
         try:
             await channel_mod.send(f'[Embed failure - please check permissions.]\n**{title}**\n<@{member.id}>')
-        except:
-            await dev_logs_channel.send(f'Error: Failed to send ban alert embed or message for <@{member.id}> in {member.guild.name}, likely due to a permissions error.')
+        except Exception as e:
+            await dev_logs_channel.send(f'Error: Failed to send ban alert embed or message for <@{member.id}> in {member.guild.name}, likely due to a permissions error.```{e}```')
+    try:
+        warn.title.replace('your server',member.guild.name)
+        await dev_logs_channel.send(embed=warn)
+    except:
+        pass
                 
-
-
 async def ban_alt_list(guild:discord.Guild,banned_ids=verif.fetch_banlist(),reason_message='A new alt account was banned from your server.'):
     time_start = time.time()
     channel_hooks = await fetch_hooks_channel(guild)
@@ -96,7 +99,13 @@ async def ban_alt_list(guild:discord.Guild,banned_ids=verif.fetch_banlist(),reas
     time_exec = time.time() - time_start
     logEmbed = discord.Embed(title='Ban list reloaded.',description=f'**{len(banned_ids)}** total entries, **{i}** new bans in this server.',color=discord.Color.blurple())
     logEmbed.set_footer(text=f'Completed in {time_exec:.2f} seconds.')
-    await channel_hooks.send(embed=logEmbed)
+    try:
+        await channel_hooks.send(embed=logEmbed)
+    except:
+        try:
+            await channel_hooks.send(f'[Embed failure - please check permissions.]\n**{logEmbed.title}**\n{logEmbed.description}')
+        except Exception as e:
+            await dev_logs_channel.send(f'Error: Failed to send log embed or message for {logEmbed.description}, likely due to a permissions error.```{e}```')
     return i
 
 @tasks.loop(seconds=15)
@@ -127,14 +136,18 @@ def has_permission_role(member:discord.Member):
 def has_perms(allow_mods=False,dev_only = False):
     '''Calculate whether or not a member has sufficient permissions for Bridge commands'''
     async def predicate(ctx:discord.ApplicationContext):
+        allowance = False
         if dev_only:
-            return (ctx.guild == dev_guild ) and ctx.author.guild_permissions.administrator
+            allowance (ctx.guild == dev_guild ) and ctx.author.guild_permissions.administrator
         else:
             admin = ctx.author == ctx.guild.owner or ctx.author.guild_permissions.administrator
             if allow_mods:    
-                return admin or has_permission_role(ctx.author)
+                allowance = admin or has_permission_role(ctx.author)
             else:
-                return admin
+                allowance = admin
+        if not allowance:
+            raise commands.CheckFailure
+        return allowance
     return commands.check(predicate)
 
 def setup_status_embed(guild:discord.Guild) -> discord.Embed():
@@ -206,7 +219,7 @@ def setup_embed(guild:discord.Guild) -> discord.Embed():
     if complete !=0:
         embed.set_footer(icon_url=completion_icons[complete-1],text=f'{((complete/3)*100):.0f}% complete')
     else:
-        embed.set_footer(text=f'{((complete/3)*100):.0f}')
+        embed.set_footer(text=f'{((complete/3)*100):.0f}% complete')
     return embed
 
 @bot.slash_command(guild_ids=guilds)
@@ -220,8 +233,6 @@ async def setup(ctx: discord.ApplicationContext):
     except:
         ctx.respond('Unable to send setup embed. Please check permissions.')
     await update_dev_setup_status(ctx.guild)
-    
-    
 
 async def initial_ban(channel:discord.TextChannel):
     await channel.send('# Setup complete.\nThis next step involves preemptively banning known alternative accounts. This may take some time. Please wait.')
@@ -320,32 +331,43 @@ async def report(ctx:discord.ApplicationContext,member:discord.Option(discord.Me
 # ==============================================================================
 bms = discord.SlashCommandGroup("bms", "Bridge Management Server commands",guild_ids=guilds)
 
-@bms.command(guild_ids=guilds)
-@has_perms(dev_only=True)
-async def crossban(ctx:discord.ApplicationContext,ban_id:int):
-    '''For Bridge management server use.'''
-    await ctx.respond(f'Baning <@{ban_id}> across all servers')
-    verif.add_to_banlist(ban_id)
+async def global_ban_refresh():
     banlist = verif.fetch_banlist() # passed in here to avoid fetching len(bot.guilds) times
     for guild in bot.guilds:
         await ban_alt_list(guild,banned_ids=banlist)
-    
+
 @bms.command(guild_ids=guilds)
 @has_perms(dev_only=True)
-async def resettestacc(ctx:discord.ApplicationContext,ban_id:int):
-    '''For Bridge developers.'''
-    unban_id = 1096298497180979262 # for development purposes
-    verif.remove_from_banlist(unban_id)
-    i=0
-    for guild in bot.guilds:
-        try:
-            user = await bot.fetch_user(unban_id)
-            ban = await guild.fetch_ban(user)
-            await guild.unban(user)
-            i+=1  
-        except discord.NotFound:
-            pass
-    await ctx.respond(f'Unbanned from **{i}** servers')
+async def crossban(ctx:discord.ApplicationContext,ban_id):
+    '''For Bridge management server use.'''
+    verif.add_to_banlist(ban_id)
+    await ctx.respond(f'Added <@{ban_id}> to ritV database.\n- Running global ban refresh.')
+    await global_ban_refresh()
+
+@bms.command(guild_ids=guilds)
+@has_perms(dev_only=True)
+async def globalrefresh(ctx:discord.ApplicationContext):
+    await ctx.respond(f'Refreshing bans globally. This will take some time.')
+    await global_ban_refresh()
+    await ctx.channel.send(f'Done.')
+
+@bms.command(guild_ids=guilds)
+@has_perms(dev_only=True)
+async def update_from_json(ctx:discord.ApplicationContext):
+    '''For Bridge management server use.'''
+    current_list = verif.fetch_banlist()
+    banlistct = 0
+    await ctx.respond('Working...')
+    try:
+        with open('populate.json', 'r') as file:
+            fill = json.load(file)        
+            for alt in fill:
+                if alt not in current_list:
+                    verif.add_to_banlist(alt)
+                    banlistct +=1
+        await ctx.respond(f'Added **{banlistct}** alts to ritV database.\nRun `/bms globalrefresh` to apply changes.')
+    except:
+        await ctx.respond('`populate.json` not found in CWD or is incorrectly formatted.')
 
 # ==============================================================================
 # Events
@@ -373,8 +395,7 @@ async def on_member_join(member: discord.Member):
             try:
                 await channel_hooks.send(embed=embed)
             except:
-                console.print('Failed to send invite log to hooks.')
-            console.print(f'({member.id}) invited by {i.inviter.name} ({i.inviter.id}) through invite: {i.code}')
+                console.print('Failed to send invite log to log channel.')
             break
     for i in newinvites:
         invites[i.code] = i.approximate_member_count
@@ -383,43 +404,54 @@ async def on_member_join(member: discord.Member):
         await memberAlert('A user on the ban list was removed.', member)
 
 @bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.respond(f'This command is on cooldown. Please retry in {round(error.retry_after, 2)}.\n## Are you still waiting for an email?\nDue to the large volume of emails being sent and restrictions on rit.edu, it may take upwards of two hours to receive this email.',ephemeral=True)
-    
+async def on_command_error(ctx:discord.ApplicationContext, error:discord.DiscordException): # wip error handling. needs some debugging
+    if isinstance(error, discord.errors.CheckFailure) or isinstance(error, commands.CheckFailure) or isinstance(error, commands.CheckAnyFailure):
+        await ctx.respond(f'### You don\'t have permission to run that command.`/{ctx.command.name}` is only available to server owners and administrators.\n*To learn more about this bot, click [here](https://github.com/mae-su/bridge/)*',ephemeral=True)
+    else:
+        await ctx.respond('### Yikes!\nAn error occured when running this command. The developers have been notified.',ephemeral=True)
+        print(f'A slash command error occurred in {ctx.guild.name}:\n  {error}',style=styles.critical_error)
+        error_embed = discord.Embed(title=f'A slash command error occured in {ctx.guild.name}', color=discord.Color.red())
+        error_embed.add_field(name='Attempted slash command', value=ctx.command.name if ctx.command else 'None', inline=False)
+        error_embed.add_field(name='Ran by', value=f'{ctx.author.name} <@{ctx.author.id}>', inline=False)
+        error_embed.add_field(name='Error', value=str(error), inline=False)
+        await dev_logs_channel.send('<@275318661647171584>',embed=error_embed)
+
 client_server_commands = [report, config, setup]
 dev_commands = [report, config, setup, bms]
 
 @bot.event
 async def on_guild_join(guild:discord.Guild):
-    print('[bold]New server joined[/bold]')
+    print('New server joined.',style=styles.success)
     try:
-        update_dev_setup_status(guild)
+        await update_dev_setup_status(guild)
     except Exception as e:
         print(e)
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'{len(bot.guilds)} RIT servers.'))
     console.print(f' ↳ Syncing universal commands to {guild.name} ...',style=styles.working)
     await guild.get_member(bot.user.id).edit(nick='Bridge - run /setup')
     await bot.sync_commands(commands=client_server_commands,guild_ids = [guild.id]) 
+    try:
+        update_dev_setup_status(guild)
+    except Exception as e:
+        console.print(f' ↳ [b]Error when attempting to send dev setup status:[/b]',style=styles.critical_error)
+        console.print(f'     {e}',style=styles.critical_error)
+    console.print(f' ↳ Done. [b]{guild.name}[/b] is ready to run setup',style=styles.success)
 
 @bot.event
 async def on_ready():
     console.print('[ul]Bot is loading.[/ul]')
     
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'{len(bot.guilds)} RIT servers.'))
     guild_ids = [guild.id for guild in bot.guilds]
-    
     console.print(f'Syncing commands...')
-
-    
-    console.print(f' ↳ Syncing universal commands...',style=styles.working)
-    await bot.sync_commands(commands=dev_commands,guild_ids = guild_ids)
-    
+    if not debug_args.no_resync:
+        console.print(f' ↳ Syncing universal commands...',style=styles.working)
+        await bot.sync_commands(commands=client_server_commands,guild_ids = guild_ids)
+    else:
+        console.print(f' ↳ --no-resync enabled: Commands only syncing in dev guild.',style=styles.working)
     console.print(f' ↳ Syncing dev server commands...',style=styles.working)
     bot.add_application_command(bms)
-    await bot.sync_commands(commands=client_server_commands,guild_ids = guilds) 
-    
-    console.print(f'Fetching from dev guild...',style=styles.working)
+    await bot.sync_commands(commands=dev_commands,guild_ids = guilds) 
+    console.print(f'Fetching dev guild channels/roles...',style=styles.working)
     global dev_guild,dev_reports_channel,dev_role,dev_logs_channel
     dev_guild = await bot.fetch_guild(1182047934750142524)
     dev_reports_channel = await dev_guild.fetch_channel(1182056826997587979)
@@ -435,6 +467,7 @@ async def on_ready():
     console.print(f' ↳ {len(invites)} invites loaded.',style=styles.working)
     refreshInvites.start()
     console.print(' ↳ Invite refresh timer started.',style=styles.working)
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'{len(bot.guilds)} RIT servers.'))
     console.print(f'Completed self setup![bold][orange] Bot is ready.[/orange][not bold]',style=styles.success)
 
 while True:
