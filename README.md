@@ -1,28 +1,43 @@
-# __Bridge__ - an RIT server security bot
-**Bridge** is a Discord bot designed to protect multiple servers against known malicious alternative accounts.
 
-This repository implements an open-sourced version of [ritV](https://github.com/mae-su/ritV/) by [mae.red](https://mae.red), an RIT server security database and library. It exists to protect multiple Discord servers against a growing list of known alternative accounts. 
+<img src="https://cdn.discordapp.com/attachments/1107483500384358510/1183677789166125076/logo-transparent.png" alt="Bridge logo" title="Bridge" align="right" height="100vh" />
 
-## Scope: What this project __is__
+# __Bridge__ is an RIT server security bot.
+<h4 align="center">A Discord bot that protects your server against alternative accounts.</h4>
+<p align="center">
+  <a href="#what-it-does">Key Features</a> •
+  <a href="#how-it-works">How It Works</a> •
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#functions">Functions</a> •
+  <a href="##authenticity">Invite</a> •
+  <a href="#credits">Credits</a>
+</p>
 
-Bridge is aimed solely against stopping **alt accounts**:
-- Accounts created for the purpose of ban evasion
-- Spam/advertisement accounts
-- Re-use of alt accounts on different servers
+---
 
-Bridge also allows server admins to check what invite link a member joins with.
 
-## Scope: What this project __is not__
+An alternative account, or **alt account** is an additional account created by a single user of a platform. Although often harmless, they can be used for malicious purposes and become a nightmare for management to keep track of. 
+
+With an influx of malicious alternative accounts in RIT communities, **Bridge** exists to solve this issue unintrusively.
+
+# What it does
+- Automatically maintains bans from a list of known **alt accounts**:
+  - Accounts created for the purpose of ban evasion
+  - Spam/advertisement accounts
+- Logs what invite link a member used when joining a server.
+- Allows communities to report new suspected alternative accounts
+## What it __doesn't__ do
 Bridge does NOT do any of the following:
 - Ban or moderate legitamate members across multiple servers
 - Email or identity verification
 - Collect information of usual server activity
 
 # How it works
-Bridge operates using a database of alternative accounts. New accounts are suggested through **reports** made from within RIT servers. **Reports** are judged by admins of a **Bridge Management Server**, available to join upon request for higher management roles of RIT servers using Bridge. When an account is determined to be an alternative account, Bridge will ban the account by ID across all servers it is in.
+Bridge operates using a database of alternative accounts Accounts suspected to be alts can be **reported** from within RIT servers. **Reports** are judged by admins of a **Bridge Management Server**, available to join upon request for higher management roles of RIT servers. When an account is determined to be an alternative account, it it added to the database, and Bridge will ban the account by ID across all servers it is in.
 
-# Getting Started
-Once Bridge has been invited, run `/setup` to access the Bridge Setup Panel. The Setup Panel will guide you through the steps necessary to get started, and can be run at any time to adjust preferences.
+Bridge implements an open-sourced version of [ritV](https://github.com/mae-su/ritV/) by [mae.red](https://mae.red), an RIT server security database and library.
+
+# Getting started
+After inviting Bridge to your server, run `/setup` to access the Bridge Setup Panel. The Setup Panel will guide you through the steps necessary to get started, and can be run at any time to adjust preferences.
 
 ![Bridge Setup Panel](https://cdn.discordapp.com/attachments/1107483500384358510/1183138527463084072/image.png)
 
@@ -34,14 +49,15 @@ Once Bridge has been invited, run `/setup` to access the Bridge Setup Panel. The
 **Once all values are set,** Bridge will automatically ban all known alternative accounts from your server.
 
 ![Bridge log message saying it preemptively banned 46 alternative accounts](https://cdn.discordapp.com/attachments/1107483500384358510/1181467148477005874/image.png)
-
-## Reporting alternative accounts with `/report`
+# Functions
+## Report alternative accounts with `/report`
 
 `/report <member> <reason>`
 
 This command will send a request to the Bridge management server to have a suspected alternative account banned.
 
-![Example usage of the altreport command.](cdn.discordapp.com/attachments/1107483500384358510/1183139475145105519/image.png)
+![Example usage of the report command.](https://cdn.discordapp.com/attachments/1107483500384358510/1183139475145105519/image.png)
+
 ### What happens behind the scenes
 Reports sent to the Bridge management server contain the following:
 - The report's **origin** *(no invite link will be made)*
@@ -61,15 +77,22 @@ If a newly added alt is *not* present in a server, the ban will be applied silen
 
 ![Embed sent by Bridge titled "Ban list reloaded" with the description "46 total entries, 1 new bans in the server"](https://cdn.discordapp.com/attachments/1107483500384358510/1181491748652990535/image.png)
 
-### Invite tracking
+## Invite tracking
 When a member joins your server, Bridge will send relevant information about the member in the log channel.
 ![Invite tracking embed, containing information about account creation date and the invite code used to join.](https://cdn.discordapp.com/attachments/1107483500384358510/1181502520061853776/image.png)
 
-# How to gain access
-An instance of Bridge is currently being deployed to RIT communities. Please reach out to **@mae.red** on Discord if you are an admin of an RIT server and would like to add this bot to your server.
+# Inviting Bridge
+The official instance of Bridge is being deployed to RIT communities. Please reach out to **@mae.red** on Discord if you are an admin of an RIT server and would like to add this bot to your server.
 
-## Feature requests
+## Authenticity
+Before hitting the "authorize" button at the permissions section of its invite, check that Bridge has been active since **Sep 15, 2023**.
+
+![Image of the "Active Since Sep 15, 2023" line in a Discord invite.](https://cdn.discordapp.com/attachments/1107483500384358510/1183665548249268224/image.png)
+
+If this line does not match, **you are most likely being scammed.**
+# Feature requests
 If you already have Bridge in your server and you want it to do more, please consider that this is not a general purpose server bot. If your community needs further cross-server mechanisms, it would best be done seperately. 
-
-## ⟶ developed by [**mae.red**](https://mae.red) and Henry
-please consider **[donating](https://www.buymeacoffee.com/maedotred)** to support my efforts!
+# Credits
+## Documentation, outreach strategies, and testing by Henry
+## ⟶ developed by [**mae.red**](https://mae.red) 
+please consider **[donating](https://www.buymeacoffee.com/maedotred)** to support my efforts.
