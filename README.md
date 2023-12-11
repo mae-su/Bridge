@@ -18,6 +18,7 @@
 An alternative account, or **alt account** is an additional account created by a single user of a platform. Although often harmless, they can be used for malicious purposes and become a nightmare for management to keep track of. 
 
 With an influx of malicious alternative accounts in RIT communities, **Bridge** exists to solve this issue unintrusively.
+
 ---
 # Key Features
 - Automatically maintains bans from a list of known **alt accounts**:
