@@ -18,14 +18,14 @@
 An alternative account, or **alt account** is an additional account created by a single user of a platform. Although often harmless, they can be used for malicious purposes and become a nightmare for management to keep track of. 
 
 With an influx of malicious alternative accounts in RIT communities, **Bridge** exists to solve this issue unintrusively.
-
-# What it does
+---
+# Key Features
 - Automatically maintains bans from a list of known **alt accounts**:
   - Accounts created for the purpose of ban evasion
   - Spam/advertisement accounts
 - Logs what invite link a member used when joining a server.
 - Allows communities to report new suspected alternative accounts
-## What it __doesn't__ do
+## What Bridge __doesn't__ do
 Bridge does NOT do any of the following:
 - Ban or moderate legitamate members across multiple servers
 - Email or identity verification
