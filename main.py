@@ -36,7 +36,7 @@ else:
 
 bot = commands.Bot(intents=discord.Intents.all())
 bot.auto_sync_commands = False
-bms_guild = '1182047934750142524'
+bms_guild_id = '1182047934750142524'
 invites = {}
 setup_panels = {}
 setup_status_panels = {}
@@ -289,7 +289,7 @@ def write_config_value(guild:discord.Guild,variable:str,value):
 # Client Server Commands
 # ==============================================================================
 
-@bot.slash_command(guild_ids=[bms_guild])
+@bot.slash_command(guild_ids=[bms_guild_id])
 @has_perms()
 async def setup(ctx: discord.ApplicationContext):
     '''Bridge Setup'''
@@ -303,7 +303,7 @@ async def setup(ctx: discord.ApplicationContext):
 
 config = discord.SlashCommandGroup("config", "Bridge configuration commands")
 
-@config.command(guild_ids=[bms_guild])
+@config.command(guild_ids=[bms_guild_id])
 async def setchannel(ctx: discord.ApplicationContext, option: discord.Option(str, choices=['Mod Channel', 'Log Channel']), value: discord.Option(discord.TextChannel)):
     '''Set the Mod or Log channel'''
     if not value.permissions_for(ctx.guild.me).view_channel or not value.permissions_for(ctx.guild.me).send_messages or not value.permissions_for(ctx.guild.me).embed_links:
@@ -324,7 +324,7 @@ async def setchannel(ctx: discord.ApplicationContext, option: discord.Option(str
     if do_initial_ban:await initial_ban(ctx.channel)
     await update_bms_setup_status(ctx.guild)
 
-@config.command(guild_ids=[bms_guild])
+@config.command(guild_ids=[bms_guild_id])
 @has_perms()
 async def setmodrole(ctx: discord.ApplicationContext,value:discord.Role):
     '''Set your server's Moderator Role for access to /report'''
@@ -345,7 +345,7 @@ async def setmodrole(ctx: discord.ApplicationContext,value:discord.Role):
 
 bot.add_application_command(config)
 
-@bot.slash_command(guild_ids=[bms_guild])
+@bot.slash_command(guild_ids=[bms_guild_id])
 async def report(ctx:discord.ApplicationContext,member:discord.Option(discord.Member,description='Mention the account to report'),reason:discord.Option(str,description='Describe what unusual activity occurred.')):
     '''Report a suspected alternative or spam account.'''
     mod_role = await configHandler(fetch_mod_role,ctx.guild)
@@ -379,7 +379,7 @@ async def report(ctx:discord.ApplicationContext,member:discord.Option(discord.Me
 # ==============================================================================
 # Developer Utilities
 # ==============================================================================
-bms = discord.SlashCommandGroup("bms", "Bridge Management Server commands",guild_ids=[bms_guild])
+bms = discord.SlashCommandGroup("bms", "Bridge Management Server commands",guild_ids=[bms_guild_id])
 
 async def global_ban_refresh():
     banlist = verif.fetch_banlist() # fetched here and passed in to avoid fetching len(bot.guilds) times
@@ -397,28 +397,28 @@ async def autocomplete_ids(ctx: discord.AutocompleteContext):
         return [current_input]
     return filtered_ids[:25]
 
-@bms.command(guild_ids=[bms_guild])
+@bms.command(guild_ids=[bms_guild_id])
 @has_perms(dev_only=True)
 async def newalt(ctx:discord.ApplicationContext,ban_id:discord.Option(str,description='Member ID',autocomplete=autocomplete_ids)):
     '''For Bridge management server use.'''
     verif.add_to_banlist(ban_id)
     await ctx.respond(f'Added <@{ban_id}> to ritV database.\nRun `/bms globalbanrefresh` to apply changes.')
 
-@bms.command(guild_ids=[bms_guild])
+@bms.command(guild_ids=[bms_guild_id])
 @has_perms(dev_only=True)
 async def rmalt(ctx:discord.ApplicationContext,ban_id:discord.Option(str,description='Member ID',autocomplete=autocomplete_ids)):
     '''For Bridge management server use.'''
     verif.remove_from_banlist(ban_id)
     await ctx.respond(f'Removed <@{ban_id}> from ritV database.')
 
-@bms.command(guild_ids=[bms_guild])
+@bms.command(guild_ids=[bms_guild_id])
 @has_perms(dev_only=True)
 async def globalbanrefresh(ctx:discord.ApplicationContext):
     await ctx.respond(f'Refreshing bans globally. This will take some time.')
     await global_ban_refresh()
     await ctx.channel.send(f'Done.')
 
-@bms.command(guild_ids=[bms_guild])
+@bms.command(guild_ids=[bms_guild_id])
 @has_perms(dev_only=True)
 async def update_from_json(ctx:discord.ApplicationContext):
     '''For Bridge management server use.'''
@@ -517,10 +517,10 @@ async def on_ready():
         console.print(f' ↳ --no-resync enabled: Commands only syncing in dev guild.',style=styles.working)
     console.print(f' ↳ Syncing dev server commands...',style=styles.working)
     bot.add_application_command(bms)
-    await bot.sync_commands(commands=dev_commands,guild_ids = [bms_guild]) 
+    await bot.sync_commands(commands=dev_commands,guild_ids = [bms_guild_id]) 
     console.print(f'Fetching dev guild channels/roles...',style=styles.working)
     global bms_guild,bms_reports_channel,bms_dev_role,bms_logs_channel
-    bms_guild = await bot.fetch_guild(1182047934750142524)
+    bms_guild = await bot.fetch_guild(int(bms_guild_id))
     bms_reports_channel = await bms_guild.fetch_channel(1182056826997587979)
     bms_logs_channel = await bms_guild.fetch_channel(1182073430548422676)
     bms_dev_role = await bms_guild._fetch_role(1182053347801436270)
