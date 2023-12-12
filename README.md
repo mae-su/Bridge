@@ -8,16 +8,18 @@
   <a href="#how-it-works">How It Works</a> •
   <a href="#getting-started">Getting Started</a> •
   <a href="#functions">Functions</a> •
-  <a href="##authenticity">Invite</a> •
+  <a href="#invite">Invite</a> •
   <a href="#credits">Credits</a>
 </p>
 
 ---
 
-
 An alternative account, or **alt account** is an additional account created by a single user of a platform. Although often harmless, they can be used for malicious purposes and become a nightmare for management to keep track of. 
 
 With an influx of malicious alternative accounts in RIT communities, **Bridge** exists to solve this issue unintrusively.
+<h3 align="center" style="margin:.5rem;text-decoration: underline;">Trusted by numerous community servers:</h3>
+<p align="center" style="margin-bottom:0;">RIT Freshmen <b>•</b> Nexthop <b>•</b> Gravitron <b>•</b> Effective Altruism</p>
+<h4 align="center" style="font-weight:normal;margin:0.5rem">...protecting over <b>1300</b> total members.</h4>
 
 ---
 # Key Features
