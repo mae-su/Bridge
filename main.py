@@ -100,7 +100,7 @@ async def memberAlert(title:str, member:discord.Member,description=None):
     warn = discord.Embed(title=title,color=discord.Colour.red(),timestamp=datetime.datetime.now())
     if description:
         warn.description = description
-    warn.set_thumbnail(url=member.avatar.url)
+    warn.set_thumbnail(url=member.display_avatar.url)
     warn.add_field(name='Name',value=member.name)
     warn.add_field(name='Mention',value=f'<@{member.id}>')    
     try:
@@ -452,16 +452,27 @@ async def on_member_join(member: discord.Member):
     embed.add_field(name='Mention',value=f'<@{member.id}>')
     
     invite_used = None
-    for i in guild_invites_latest:
-        if invites[i.code] < i.uses: # Check if any invites incremented in the stored count
-            invite_used = i
-            break
+    probable_invites = []
+    
+    for invite in guild_invites_latest:
+        try:
+            if invites[invite.code] < invite.uses: # Check if any invites incremented in the stored count
+                invite_used = invite
+                break
+        except KeyError: # if the invite was not in storage
+            invites[invite.code] = invite.approximate_member_count # add the invite 
+            probable_invites.append(invite.code)
+            invite_used = invite # overidden later if two keyerrors occurred
 
-    inviter = f'<@{invite_used.inviter.id}>' if invite_used else 'Hub/Community Link'
-    embed.add_field(name='Invited by:', value=f'{inviter}')
+    if len(probable_invites)>2: # if more than two new invites were not in storage, we can't tell which which invite was used.
+        invite_used = None
+        inviter = 'Failed to determine which invite was used.'    
+        embed.add_field(name='Possible invite codes', value=f'`{", ".join(probable_invites)}`')
+    else:
+        inviter = f'<@{invite_used.inviter.id}>' if invite_used else 'Hub/Community Link'
+        embed.add_field(name='Invited by:', value=f'{inviter}')
     if invite_used:
         embed.add_field(name='Through invite code:', value=f'`{invite_used.code}`')
-    
     for i in guild_invites_latest:
         invites[i.code] = i.uses
     await channel_hooks.send(embed=embed)
